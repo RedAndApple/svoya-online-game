@@ -578,7 +578,6 @@ function renderPlayer() {
   $("pScore0").textContent = room.state.scores[0];
   $("pScore1").textContent = room.state.scores[1];
 
-  const player = room.players[socket.id];
   if (player) {
     myReady = !!player.ready;
     $("readyBtn").classList.toggle("active", myReady);
