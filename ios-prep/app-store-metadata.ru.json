@@ -1,0 +1,18 @@
+{
+  "app_name": "Своя Игра Онлайн",
+  "bundle_id": "ru.svoyaigra.online",
+  "sku": "svoya-igra-online-001",
+  "primary_language": "Russian",
+  "category": "Games",
+  "subcategory": "Trivia",
+  "age_rating_hint": "4+",
+  "copyright": "2026",
+  "support_url": "https://svoya-online-game.onrender.com/support.html",
+  "marketing_url": "https://svoya-online-game.onrender.com",
+  "privacy_policy_url": "https://svoya-online-game.onrender.com/privacy.html",
+  "description": "Своя Игра Онлайн — командная викторина для вечеринок, учебы и корпоративов. Ведущий создает комнату, игроки подключаются с телефона по QR-коду, отвечают на вопросы, подают апелляции и соревнуются в трех раундах и финале.",
+  "keywords": "викторина, своя игра, квиз, quiz, вечеринка, вопросы, команды, игра",
+  "promotional_text": "Командная онлайн-викторина с QR-входом, большим экраном, таймером, апелляциями и финальными ставками.",
+  "subtitle": "Командная онлайн-викторина",
+  "review_notes": "Приложение не требует аккаунта. Для теста: откройте приложение, создайте комнату как ведущий, затем с другого устройства подключитесь по коду или QR. Backend для теста: https://svoya-online-game.onrender.com. Пользовательский контент модерируется ведущим комнаты: есть жалобы, удаление игроков, апелляции и правила безопасности."
+}

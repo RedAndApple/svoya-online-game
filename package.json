@@ -1,17 +1,31 @@
 {
   "name": "svoya-online-game",
   "version": "1.0.0",
-  "description": "Онлайн Своя игра для двух команд",
+  "description": "Онлайн-викторина для компаний и вечеринок",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "cap:init": "npx cap init \"Своя Игра Онлайн\" ru.svoyaigra.online --web-dir public",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync ios",
+    "cap:open:ios": "npx cap open ios",
+    "ios:prepare": "npm install && npm run cap:sync && npm run cap:open:ios"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
   }
 }

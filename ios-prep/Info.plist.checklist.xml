@@ -1,0 +1,31 @@
+<!-- Add/verify these values in ios/App/App/Info.plist after `npx cap add ios`.
+Capacitor will generate the native project; this file is a checklist/snippet. -->
+
+<key>CFBundleDisplayName</key>
+<string>Своя Игра</string>
+
+<key>CFBundleName</key>
+<string>Своя Игра</string>
+
+<key>CFBundleIdentifier</key>
+<string>ru.svoyaigra.online</string>
+
+<key>UILaunchStoryboardName</key>
+<string>LaunchScreen</string>
+
+<key>UIRequiresFullScreen</key>
+<false/>
+
+<key>UISupportedInterfaceOrientations</key>
+<array>
+  <string>UIInterfaceOrientationPortrait</string>
+</array>
+
+<key>UISupportedInterfaceOrientations~ipad</key>
+<array>
+  <string>UIInterfaceOrientationPortrait</string>
+  <string>UIInterfaceOrientationLandscapeLeft</string>
+  <string>UIInterfaceOrientationLandscapeRight</string>
+</array>
+
+<!-- No camera/microphone/location permissions are required in the current version. -->

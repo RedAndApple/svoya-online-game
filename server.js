@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const { generateGameData, resetUsedQuestions } = require("./questionEngine");
 
 const app = express();
 const server = http.createServer(app);
@@ -11,141 +12,38 @@ const io = new Server(server, {
 app.use(express.static("public"));
 
 const PORT = process.env.PORT || 3000;
-
-const gameData = {
-  rounds: [
-    {
-      name: "Раунд 1",
-      multiplier: 1,
-      categories: [
-        { title: "Кино", qs: [
-          ["Кто снял фильм «Интерстеллар»?", "Кристофер Нолан"],
-          ["Как называется школа магии из «Гарри Поттера»?", "Хогвартс"],
-          ["Фраза «Я вернусь» из какого фильма?", "Терминатор"],
-          ["Кто снял «Криминальное чтиво»?", "Квентин Тарантино"],
-          ["С какой франшизой связана красная и синяя таблетка?", "Матрица"]
-        ]},
-        { title: "Музыка", qs: [
-          ["Сколько струн у обычной гитары?", "6"],
-          ["Что измеряется в BPM?", "Темп"],
-          ["Как называется повторяющаяся часть песни после куплета?", "Припев"],
-          ["Самый низкий мужской голос?", "Бас"],
-          ["Что делает компрессор в звуке?", "Сжимает динамический диапазон"]
-        ]},
-        { title: "Финансы", qs: [
-          ["Что такое инфляция?", "Общий рост цен"],
-          ["Что такое ВВП?", "Валовой внутренний продукт"],
-          ["Кто проводит денежно-кредитную политику?", "Центральный банк"],
-          ["Что такое облигация?", "Долговая ценная бумага"],
-          ["Что такое ликвидность?", "Способность быстро превратиться в деньги без больших потерь"]
-        ]},
-        { title: "Россия", qs: [
-          ["Северная столица России?", "Санкт-Петербург"],
-          ["Какая река протекает через Москву?", "Москва-река"],
-          ["Кто крестил Русь?", "Владимир"],
-          ["Нижняя палата парламента РФ?", "Государственная Дума"],
-          ["Один из древнейших городов России?", "Дербент"]
-        ]},
-        { title: "Разное", qs: [
-          ["Сколько минут в двух часах?", "120"],
-          ["Столица Японии?", "Токио"],
-          ["Какая планета ближе всего к Солнцу?", "Меркурий"],
-          ["Химический символ золота?", "Au"],
-          ["Сколько граней у куба?", "6"]
-        ]}
-      ]
-    },
-    {
-      name: "Раунд 2",
-      multiplier: 2,
-      categories: [
-        { title: "История", qs: [
-          ["В каком году началась Вторая мировая война?", "1939"],
-          ["Кто был первым императором России?", "Петр I"],
-          ["Как называлась столица Византии?", "Константинополь"],
-          ["В каком году произошла Октябрьская революция?", "1917"],
-          ["Торговый путь через Русь в Византию?", "Путь из варяг в греки"]
-        ]},
-        { title: "Технологии", qs: [
-          ["Что означает AI?", "Искусственный интеллект"],
-          ["Что такое frontend?", "Клиентская часть"],
-          ["Система контроля версий у разработчиков?", "Git"],
-          ["Что такое API?", "Интерфейс программного взаимодействия"],
-          ["Главный язык браузера для логики сайта?", "JavaScript"]
-        ]},
-        { title: "Спорт", qs: [
-          ["Сколько игроков одной команды на поле в футболе?", "11"],
-          ["В каком виде спорта есть эйс?", "Теннис"],
-          ["Сколько очков дает штрафной бросок в баскетболе?", "1"],
-          ["Плавание, велосипед, бег — это?", "Триатлон"],
-          ["Победа, когда соперник не может продолжать бой?", "Нокаут"]
-        ]},
-        { title: "География", qs: [
-          ["Самая большая страна мира?", "Россия"],
-          ["Столица Канады?", "Оттава"],
-          ["Самая большая жаркая пустыня?", "Сахара"],
-          ["На каком материке Бразилия?", "Южная Америка"],
-          ["Самый большой океан?", "Тихий океан"]
-        ]},
-        { title: "Логика", qs: [
-          ["Что тяжелее: 1 кг железа или 1 кг ваты?", "Одинаково"],
-          ["Сколько месяцев имеют 28 дней?", "Все 12"],
-          ["Что можно сломать, не трогая?", "Обещание"],
-          ["Чем больше из нее берешь, тем больше она становится?", "Яма"],
-          ["У отца Мэри 5 дочерей: Чача, Чече, Чичи, Чочо. Пятая?", "Мэри"]
-        ]}
-      ]
-    },
-    {
-      name: "Раунд 3",
-      multiplier: 3,
-      categories: [
-        { title: "Бизнес", qs: [
-          ["Что такое MVP?", "Минимально жизнеспособный продукт"],
-          ["Что такое CAC?", "Стоимость привлечения клиента"],
-          ["Что показывает LTV?", "Ценность клиента за весь срок"],
-          ["Что такое маржинальность?", "Доля прибыли в выручке"],
-          ["Что такое юнит-экономика?", "Экономика одной единицы продукта/клиента"]
-        ]},
-        { title: "Искусство", qs: [
-          ["Кто написал «Черный квадрат»?", "Казимир Малевич"],
-          ["Кто написал «Мону Лизу»?", "Леонардо да Винчи"],
-          ["Искусство красивого письма?", "Каллиграфия"],
-          ["Произведение из трех частей?", "Триптих"],
-          ["Стиль с сильным выражением эмоций и искажением форм?", "Экспрессионизм"]
-        ]},
-        { title: "Наука", qs: [
-          ["Формула воды?", "H2O"],
-          ["Что измеряют в ньютонах?", "Силу"],
-          ["Отрицательно заряженная частица?", "Электрон"],
-          ["Что изучает генетика?", "Наследственность и изменчивость"],
-          ["Процесс деления клетки?", "Митоз"]
-        ]},
-        { title: "Игры", qs: [
-          ["В какой игре есть криперы?", "Minecraft"],
-          ["Жанр с последним выжившим?", "Battle Royale"],
-          ["Кто создал GTA?", "Rockstar Games"],
-          ["Что значит NPC?", "Неигровой персонаж"],
-          ["Случайная покупка предмета в игре?", "Лутбокс"]
-        ]},
-        { title: "Сложное", qs: [
-          ["Валюта МВФ на основе корзины валют?", "СДР / SDR"],
-          ["Доходность облигации к погашению?", "YTM"],
-          ["Что такое дюрация?", "Чувствительность облигации к ставкам"],
-          ["Заработок на разнице цен на рынках?", "Арбитраж"],
-          ["Индекс цен всех товаров и услуг ВВП?", "Дефлятор ВВП"]
-        ]}
-      ]
-    }
-  ],
-  final: {
-    theme: "Финал",
-    question: "Цена выросла на 20%, потом снизилась на 20%. Итоговая цена стала выше, ниже или равна первоначальной?",
-    answer: "Ниже первоначальной на 4%."
-  }
-};
-
 const rooms = new Map();
+const SNAPSHOT_PATH = require("path").join(__dirname, "roomsSnapshot.json");
+
+function saveRoomsSnapshot() {
+  try {
+    const data = Array.from(rooms.entries()).map(([code, room]) => [code, {
+      ...room,
+      hostId: null
+    }]);
+    require("fs").writeFileSync(SNAPSHOT_PATH, JSON.stringify({ rooms: data, updatedAt: new Date().toISOString() }, null, 2), "utf8");
+  } catch (e) {
+    console.error("Snapshot save failed:", e.message);
+  }
+}
+
+function loadRoomsSnapshot() {
+  try {
+    if (!require("fs").existsSync(SNAPSHOT_PATH)) return;
+    const raw = JSON.parse(require("fs").readFileSync(SNAPSHOT_PATH, "utf8"));
+    if (!Array.isArray(raw.rooms)) return;
+    for (const [code, room] of raw.rooms) {
+      if (!room || !room.code || !room.gameData || !room.state) continue;
+      room.hostId = null;
+      rooms.set(code, room);
+    }
+    console.log(`Loaded ${rooms.size} room snapshots`);
+  } catch (e) {
+    console.error("Snapshot load failed:", e.message);
+  }
+}
+
+loadRoomsSnapshot();
 
 function makeRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -154,13 +52,17 @@ function makeRoomCode() {
   return code;
 }
 
-function createRoom(hostId) {
+function createRoom(hostId, topic, settings = {}, preset = "classic") {
   let code;
   do code = makeRoomCode(); while (rooms.has(code));
+
+  const seed = `${code}-${Date.now()}-${Math.random()}`;
+  const gameData = generateGameData({ seed, topic });
 
   const room = {
     code,
     hostId,
+    gameData,
     players: {},
     state: {
       teamNames: ["Черные короли", "Усатые карлики"],
@@ -171,11 +73,40 @@ function createRoom(hostId) {
       used: {},
       currentQuestion: null,
       buzzes: [],
-      finalApplied: [false, false]
+      finalApplied: [false, false],
+      lastActions: [],
+      timer: {
+        active: false,
+        duration: 30,
+        startedAt: null
+      },
+      buzzLocked: false,
+      winner: null,
+      settings: {
+        defaultTimer: 30,
+        allowNegativeScores: true,
+        autoLockAfterFirstBuzz: false
+      },
+      eventLog: [],
+      teamWagers: [null, null],
+      appeals: [],
+      teamNotes: ["", ""],
+      reports: [],
+      kickedPlayers: {},
+      roomPreset: "classic"
     }
   };
 
+  room.state.roomPreset = sanitizeText(preset || "classic", 40);
+
+  Object.assign(room.state.settings, {
+    defaultTimer: [15, 30, 45, 60, 90].includes(Number(settings.defaultTimer)) ? Number(settings.defaultTimer) : 30,
+    allowNegativeScores: settings.allowNegativeScores !== false,
+    autoLockAfterFirstBuzz: !!settings.autoLockAfterFirstBuzz
+  });
+
   rooms.set(code, room);
+  saveRoomsSnapshot();
   return room;
 }
 
@@ -183,7 +114,7 @@ function publicRoom(room) {
   return {
     code: room.code,
     players: room.players,
-    gameData,
+    gameData: room.gameData,
     state: room.state
   };
 }
@@ -204,23 +135,113 @@ function isHost(socket, room) {
   return room && room.hostId === socket.id;
 }
 
+const bannedTextPatterns = [
+  /экстремизм/iu,
+  /нацизм/iu,
+  /террор/iu
+];
+
+function sanitizeText(text, max = 200) {
+  text = String(text || "").trim().slice(0, max);
+  for (const pattern of bannedTextPatterns) {
+    text = text.replace(pattern, "[скрыто]");
+  }
+  return text;
+}
+
+function containsBlockedText(text) {
+  return bannedTextPatterns.some(pattern => pattern.test(String(text || "")));
+}
+
+function validateImportedGameData(data) {
+  if (!data || !Array.isArray(data.rounds) || data.rounds.length !== 3) return false;
+  for (let r = 0; r < 3; r++) {
+    const round = data.rounds[r];
+    if (!round || !Array.isArray(round.categories) || round.categories.length !== 5) return false;
+    round.name = round.name || `Раунд ${r + 1}`;
+    round.multiplier = r + 1;
+
+    for (const cat of round.categories) {
+      if (!cat || typeof cat.title !== "string" || !Array.isArray(cat.qs) || cat.qs.length !== 5) return false;
+      for (const qa of cat.qs) {
+        if (!Array.isArray(qa) || qa.length !== 2) return false;
+        if (typeof qa[0] !== "string" || typeof qa[1] !== "string") return false;
+      }
+    }
+  }
+
+  if (!data.final || typeof data.final.question !== "string" || typeof data.final.answer !== "string") return false;
+  data.final.theme = data.final.theme || "Финал";
+  return true;
+}
+
+function logEvent(room, text, type = "info") {
+  if (!room.state.eventLog) room.state.eventLog = [];
+  room.state.eventLog.push({
+    id: `${Date.now()}-${Math.random()}`,
+    type,
+    text,
+    at: Date.now()
+  });
+  room.state.eventLog = room.state.eventLog.slice(-80);
+}
+
+function applyScore(room, team, delta) {
+  if (!room.state.settings?.allowNegativeScores) {
+    room.state.scores[team] = Math.max(0, room.state.scores[team] + delta);
+  } else {
+    applyScore(room, team, delta);
+  }
+}
+
 io.on("connection", socket => {
-  socket.on("host:create", () => {
-    const room = createRoom(socket.id);
-    socket.data.roomCode = room.code;
+  socket.on("host:reclaim", ({ code }) => {
+    code = String(code || "").trim().toUpperCase();
+    const room = rooms.get(code);
+    if (!room) return socket.emit("error:message", "Комната не найдена.");
+
+    room.hostId = socket.id;
+    socket.data.roomCode = code;
     socket.data.role = "host";
-    socket.join(room.code);
+    socket.join(code);
     socket.emit("host:created", publicRoom(room));
-    emitRoom(room.code);
+    emitRoom(code);
+  });
+
+  socket.on("host:create", ({ topic, settings, preset } = {}) => {
+    try {
+      const room = createRoom(socket.id, topic, settings, preset);
+      socket.data.roomCode = room.code;
+      socket.data.role = "host";
+      socket.join(room.code);
+      socket.emit("host:created", publicRoom(room));
+      emitRoom(room.code);
+    } catch (err) {
+      console.error(err);
+      socket.emit("error:message", "Не удалось создать комнату.");
+    }
+  });
+
+  socket.on("spectator:join", ({ code }) => {
+    code = String(code || "").trim().toUpperCase();
+    const room = rooms.get(code);
+    if (!room) return socket.emit("error:message", "Комната не найдена.");
+
+    socket.data.roomCode = code;
+    socket.data.role = "spectator";
+    socket.join(code);
+    socket.emit("spectator:joined", publicRoom(room));
+    emitRoom(code);
   });
 
   socket.on("player:join", ({ code, name, team }) => {
     code = String(code || "").trim().toUpperCase();
-    name = String(name || "").trim().slice(0, 30);
+    name = sanitizeText(name, 30);
     team = Number(team);
 
     const room = rooms.get(code);
     if (!room) return socket.emit("error:message", "Комната не найдена.");
+    if (room.state.kickedPlayers && room.state.kickedPlayers[name.toLowerCase()]) return socket.emit("error:message", "Этот игрок удален из комнаты.");
     if (!name) return socket.emit("error:message", "Введите имя.");
     if (![0,1].includes(team)) return socket.emit("error:message", "Выберите команду.");
 
@@ -231,7 +252,9 @@ io.on("connection", socket => {
       id: socket.id,
       name,
       team,
-      connected: true
+      connected: true,
+      ready: false,
+      captain: false
     };
 
     socket.data.roomCode = code;
@@ -245,7 +268,7 @@ io.on("connection", socket => {
     const room = getRoomBySocket(socket);
     if (!isHost(socket, room)) return;
 
-    const r = gameData.rounds[round];
+    const r = room.gameData.rounds[round];
     if (!r || !r.categories[cat] || !r.categories[cat].qs[q]) return;
 
     const key = `${round}-${cat}-${q}`;
@@ -266,12 +289,18 @@ io.on("connection", socket => {
       answerShown: false
     };
     room.state.buzzes = [];
+    room.state.timer = {
+      active: true,
+      duration: room.state.settings?.defaultTimer || room.state.timer?.duration || 30,
+      startedAt: Date.now()
+    };
+    room.state.buzzLocked = false;
     emitRoom(room.code);
   });
 
   socket.on("player:buzz", () => {
     const room = getRoomBySocket(socket);
-    if (!room || !room.state.currentQuestion) return;
+    if (!room || !room.state.currentQuestion || room.state.buzzLocked) return;
 
     const player = room.players[socket.id];
     if (!player) return;
@@ -285,6 +314,11 @@ io.on("connection", socket => {
       team: player.team,
       at: Date.now()
     });
+
+    logEvent(room, `Нажал: ${player.name} (${room.state.teamNames[player.team]})`, "buzz");
+    if (room.state.settings?.autoLockAfterFirstBuzz && room.state.buzzes.length === 1) {
+      room.state.buzzLocked = true;
+    }
 
     emitRoom(room.code);
   });
@@ -306,11 +340,27 @@ io.on("connection", socket => {
     const team = player.team;
     const value = room.state.currentQuestion.value;
 
-    room.state.scores[team] += correct ? value : -value;
+    const delta = correct ? value : -value;
+
+    applyScore(room, team, delta);
+    room.state.lastActions.push({
+      type: "award",
+      team,
+      delta,
+      questionKey: room.state.currentQuestion.key,
+      questionText: room.state.currentQuestion.text,
+      at: Date.now()
+    });
+    room.state.lastActions = room.state.lastActions.slice(-20);
+    logEvent(room, `${correct ? "Верно" : "Неверно"}: ${player.name}, ${room.state.teamNames[team]}, ${delta > 0 ? "+" : ""}${delta}`, correct ? "success" : "danger");
+
     room.state.chooser = correct ? team : (team === 0 ? 1 : 0);
     room.state.used[room.state.currentQuestion.key] = true;
     room.state.currentQuestion = null;
     room.state.buzzes = [];
+    room.state.timer = { active: false, duration: 30, startedAt: null };
+    room.state.buzzLocked = false;
+    room.state.winner = null;
 
     emitRoom(room.code);
   });
@@ -319,10 +369,21 @@ io.on("connection", socket => {
     const room = getRoomBySocket(socket);
     if (!isHost(socket, room) || !room.state.currentQuestion) return;
 
+    room.state.lastActions.push({
+      type: "nobody",
+      team: null,
+      delta: 0,
+      questionKey: room.state.currentQuestion.key,
+      questionText: room.state.currentQuestion.text,
+      at: Date.now()
+    });
+    room.state.lastActions = room.state.lastActions.slice(-20);
+
     room.state.used[room.state.currentQuestion.key] = true;
     room.state.chooser = room.state.chooser === 0 ? 1 : 0;
     room.state.currentQuestion = null;
     room.state.buzzes = [];
+    room.state.timer = { active: false, duration: 30, startedAt: null };
 
     emitRoom(room.code);
   });
@@ -335,6 +396,7 @@ io.on("connection", socket => {
     room.state.round = round;
     room.state.currentQuestion = null;
     room.state.buzzes = [];
+    room.state.timer = { active: false, duration: 30, startedAt: null };
     emitRoom(room.code);
   });
 
@@ -348,8 +410,10 @@ io.on("connection", socket => {
     if (room.state.finalApplied[team]) return;
 
     wager = Math.min(wager, Math.max(0, room.state.scores[team]));
-    room.state.scores[team] += correct ? wager : -wager;
+    applyScore(room, team, correct ? wager : -wager);
     room.state.finalApplied[team] = true;
+    logEvent(room, `Финал: ${room.state.teamNames[team]} ${correct ? "верно" : "неверно"}, ставка ${wager}`, correct ? "success" : "danger");
+    saveRoomsSnapshot();
 
     emitRoom(room.code);
   });
@@ -365,8 +429,333 @@ io.on("connection", socket => {
     room.state.currentQuestion = null;
     room.state.buzzes = [];
     room.state.finalApplied = [false, false];
+    room.state.lastActions = [];
+    room.state.timer = { active: false, duration: 30, startedAt: null };
 
     emitRoom(room.code);
+  });
+
+
+  socket.on("host:setTimer", ({ duration }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    duration = Number(duration);
+    if (![15, 30, 45, 60, 90].includes(duration)) duration = 30;
+
+    room.state.timer = {
+      active: !!room.state.currentQuestion,
+      duration,
+      startedAt: room.state.currentQuestion ? Date.now() : null
+    };
+
+    emitRoom(room.code);
+  });
+
+  socket.on("host:stopTimer", () => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    room.state.timer = {
+      active: false,
+      duration: room.state.timer?.duration || 30,
+      startedAt: null
+    };
+
+    emitRoom(room.code);
+  });
+
+  socket.on("host:undoLastAction", () => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    const action = room.state.lastActions.pop();
+    if (!action) return socket.emit("error:message", "Нечего отменять.");
+
+    if (action.type === "award") {
+      room.state.scores[action.team] -= action.delta;
+      if (action.questionKey) delete room.state.used[action.questionKey];
+      socket.emit("error:message", "Последнее начисление отменено. Вопрос снова доступен.");
+    } else if (action.type === "nobody") {
+      if (action.questionKey) delete room.state.used[action.questionKey];
+      socket.emit("error:message", "Последнее действие отменено. Вопрос снова доступен.");
+    } else if (action.type === "manual") {
+      room.state.scores[action.team] -= action.delta;
+      socket.emit("error:message", "Ручная корректировка отменена.");
+    }
+
+    emitRoom(room.code);
+  });
+
+
+  socket.on("player:setReady", ({ ready }) => {
+    const room = getRoomBySocket(socket);
+    if (!room || socket.data.role !== "player" || !room.players[socket.id]) return;
+
+    room.players[socket.id].ready = !!ready;
+    emitRoom(room.code);
+  });
+
+  socket.on("host:setBuzzLocked", ({ locked }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    room.state.buzzLocked = !!locked;
+    emitRoom(room.code);
+  });
+
+  socket.on("host:adjustScore", ({ team, delta }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    team = Number(team);
+    delta = Number(delta);
+    if (![0, 1].includes(team) || !Number.isFinite(delta)) return;
+
+    applyScore(room, team, delta);
+    room.state.lastActions.push({
+      type: "manual",
+      team,
+      delta,
+      questionKey: null,
+      questionText: "Ручная корректировка очков",
+      at: Date.now()
+    });
+    room.state.lastActions = room.state.lastActions.slice(-20);
+    logEvent(room, `Ручная корректировка: ${room.state.teamNames[team]} ${delta > 0 ? "+" : ""}${delta}`, "info");
+    saveRoomsSnapshot();
+    emitRoom(room.code);
+  });
+
+  socket.on("host:replaceGameData", ({ gameData }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    if (!validateImportedGameData(gameData)) {
+      return socket.emit("error:message", "Файл вопросов не подходит по структуре.");
+    }
+
+    room.gameData = gameData;
+    room.state.round = 0;
+    room.state.used = {};
+    room.state.currentQuestion = null;
+    room.state.buzzes = [];
+    room.state.finalApplied = [false, false];
+    room.state.timer = { active: false, duration: 30, startedAt: null };
+    room.state.buzzLocked = false;
+    room.state.winner = null;
+
+    socket.emit("error:message", "Пакет вопросов загружен.");
+    emitRoom(room.code);
+  });
+
+  socket.on("host:finishGame", () => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    const s0 = room.state.scores[0];
+    const s1 = room.state.scores[1];
+
+    room.state.winner = s0 === s1
+      ? { type: "draw", title: "Ничья", subtitle: `${s0} : ${s1}` }
+      : s0 > s1
+        ? { type: "team", team: 0, title: `Победили ${room.state.teamNames[0]}`, subtitle: `${s0} : ${s1}` }
+        : { type: "team", team: 1, title: `Победили ${room.state.teamNames[1]}`, subtitle: `${s1} : ${s0}` };
+
+    emitRoom(room.code);
+  });
+
+  socket.on("host:clearWinner", () => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+    room.state.winner = null;
+    emitRoom(room.code);
+  });
+
+
+  socket.on("host:updateSettings", ({ settings }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    room.state.settings = room.state.settings || {};
+    if ([15, 30, 45, 60, 90].includes(Number(settings?.defaultTimer))) {
+      room.state.settings.defaultTimer = Number(settings.defaultTimer);
+    }
+    if (typeof settings?.allowNegativeScores === "boolean") {
+      room.state.settings.allowNegativeScores = settings.allowNegativeScores;
+    }
+    if (typeof settings?.autoLockAfterFirstBuzz === "boolean") {
+      room.state.settings.autoLockAfterFirstBuzz = settings.autoLockAfterFirstBuzz;
+    }
+
+    logEvent(room, "Настройки комнаты обновлены", "info");
+    saveRoomsSnapshot();
+    emitRoom(room.code);
+  });
+
+  socket.on("host:setCaptain", ({ playerId }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    const player = room.players[playerId];
+    if (!player) return;
+
+    for (const p of Object.values(room.players)) {
+      if (p.team === player.team) p.captain = false;
+    }
+    player.captain = true;
+
+    logEvent(room, `${player.name} назначен капитаном команды ${room.state.teamNames[player.team]}`, "info");
+    saveRoomsSnapshot();
+    emitRoom(room.code);
+  });
+
+  socket.on("player:appeal", ({ text }) => {
+    const room = getRoomBySocket(socket);
+    if (!room || socket.data.role !== "player") return;
+    const player = room.players[socket.id];
+    if (!player) return;
+
+    text = sanitizeText(text, 220);
+    if (!text) return;
+
+    room.state.appeals = room.state.appeals || [];
+    room.state.appeals.push({
+      id: `${Date.now()}-${Math.random()}`,
+      playerId: socket.id,
+      playerName: player.name,
+      team: player.team,
+      text,
+      status: "open",
+      at: Date.now()
+    });
+    room.state.appeals = room.state.appeals.slice(-30);
+    logEvent(room, `Апелляция: ${player.name} — ${text}`, "appeal");
+    emitRoom(room.code);
+  });
+
+  socket.on("host:resolveAppeal", ({ appealId, accepted }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    const appeal = (room.state.appeals || []).find(a => a.id === appealId);
+    if (!appeal) return;
+    appeal.status = accepted ? "accepted" : "rejected";
+    logEvent(room, `Апелляция ${accepted ? "принята" : "отклонена"}: ${appeal.playerName}`, accepted ? "success" : "danger");
+    emitRoom(room.code);
+  });
+
+  socket.on("player:submitWager", ({ wager }) => {
+    const room = getRoomBySocket(socket);
+    if (!room || socket.data.role !== "player") return;
+    const player = room.players[socket.id];
+    if (!player) return;
+
+    const hasCaptain = Object.values(room.players).some(p => p.team === player.team && p.captain);
+    if (hasCaptain && !player.captain) return socket.emit("error:message", "Ставку финала отправляет капитан.");
+
+    wager = Math.max(0, Number(wager || 0));
+    wager = Math.min(wager, Math.max(0, room.state.scores[player.team]));
+    room.state.teamWagers[player.team] = {
+      team: player.team,
+      wager,
+      by: player.name,
+      at: Date.now()
+    };
+
+    logEvent(room, `${room.state.teamNames[player.team]} отправили финальную ставку`, "info");
+    emitRoom(room.code);
+  });
+
+  socket.on("player:updateTeamNote", ({ text }) => {
+    const room = getRoomBySocket(socket);
+    if (!room || socket.data.role !== "player") return;
+    const player = room.players[socket.id];
+    if (!player) return;
+
+    const hasCaptain = Object.values(room.players).some(p => p.team === player.team && p.captain);
+    if (hasCaptain && !player.captain) return;
+
+    text = sanitizeText(text, 500);
+    room.state.teamNotes[player.team] = text;
+    emitRoom(room.code);
+  });
+
+  socket.on("host:clearEventLog", () => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+    room.state.eventLog = [];
+    emitRoom(room.code);
+  });
+
+
+  socket.on("player:report", ({ targetPlayerId, reason }) => {
+    const room = getRoomBySocket(socket);
+    if (!room || socket.data.role !== "player") return;
+
+    const reporter = room.players[socket.id];
+    const target = room.players[targetPlayerId];
+    if (!reporter || !target) return;
+
+    reason = sanitizeText(reason, 240) || "Без причины";
+
+    room.state.reports = room.state.reports || [];
+    room.state.reports.push({
+      id: `${Date.now()}-${Math.random()}`,
+      reporterId: socket.id,
+      reporterName: reporter.name,
+      targetPlayerId,
+      targetName: target.name,
+      targetTeam: target.team,
+      reason,
+      status: "open",
+      at: Date.now()
+    });
+    room.state.reports = room.state.reports.slice(-50);
+
+    logEvent(room, `Жалоба: ${reporter.name} на ${target.name}`, "appeal");
+    saveRoomsSnapshot();
+    emitRoom(room.code);
+  });
+
+  socket.on("host:resolveReport", ({ reportId, accepted }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    const report = (room.state.reports || []).find(r => r.id === reportId);
+    if (!report) return;
+    report.status = accepted ? "accepted" : "rejected";
+
+    logEvent(room, `Жалоба ${accepted ? "принята" : "отклонена"}: ${report.targetName}`, accepted ? "success" : "danger");
+    saveRoomsSnapshot();
+    emitRoom(room.code);
+  });
+
+  socket.on("host:kickPlayer", ({ playerId }) => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    const player = room.players[playerId];
+    if (!player) return;
+
+    room.state.kickedPlayers = room.state.kickedPlayers || {};
+    room.state.kickedPlayers[player.name.toLowerCase()] = true;
+    delete room.players[playerId];
+
+    io.to(playerId).emit("error:message", "Ведущий удалил вас из комнаты.");
+    io.sockets.sockets.get(playerId)?.leave(room.code);
+
+    logEvent(room, `Игрок удален: ${player.name}`, "danger");
+    saveRoomsSnapshot();
+    emitRoom(room.code);
+  });
+
+  socket.on("host:resetUsedQuestions", () => {
+    const room = getRoomBySocket(socket);
+    if (!isHost(socket, room)) return;
+
+    resetUsedQuestions();
+    socket.emit("error:message", "История использованных вопросов сброшена.");
   });
 
   socket.on("disconnect", () => {
@@ -379,8 +768,10 @@ io.on("connection", socket => {
     }
 
     if (socket.data.role === "host") {
-      io.to(room.code).emit("error:message", "Ведущий отключился. Комната закрыта.");
-      rooms.delete(room.code);
+      room.hostId = null;
+      io.to(room.code).emit("error:message", "Ведущий отключился. Комната сохранена. Ведущий может восстановить комнату по коду.");
+      saveRoomsSnapshot();
+      emitRoom(room.code);
     }
   });
 });

@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Своя игра Online</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#f4c76a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Своя Игра" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -20,7 +25,41 @@
       <section class="card hero">
         <h2>Запуск</h2>
         <p>Один человек открывает игру как ведущий. Остальные заходят с телефонов по ссылке и коду комнаты.</p>
+
+        <label>Быстрый пресет</label>
+        <div class="preset-grid">
+          <button class="preset-btn active" data-preset="classic" data-topic="">Классика</button>
+          <button class="preset-btn" data-preset="russia" data-topic="Россия и 2000-е, вечеринка, мемы">Для России</button>
+          <button class="preset-btn" data-preset="student" data-topic="универ, экономика, финансы, логика">Студенты</button>
+          <button class="preset-btn" data-preset="party" data-topic="вечеринка, кино, музыка, мемы">Вечеринка</button>
+          <button class="preset-btn" data-preset="business" data-topic="бизнес, финансы, технологии">Корпоратив</button>
+        </div>
+
+        <label>Тематика игры</label>
+        <input id="gameTopic" placeholder="Например: кино, мемы, музыка, финансы, история, спорт..." autocomplete="off" />
+
+        <div class="room-settings">
+          <label>Таймер по умолчанию</label>
+          <select id="defaultTimer">
+            <option value="15">15 сек</option>
+            <option value="30" selected>30 сек</option>
+            <option value="45">45 сек</option>
+            <option value="60">60 сек</option>
+            <option value="90">90 сек</option>
+          </select>
+
+          <label class="check-row"><input id="allowNegativeScores" type="checkbox" checked /> Разрешить минусовые очки</label>
+          <label class="check-row"><input id="autoLockAfterFirstBuzz" type="checkbox" /> Блокировать кнопки после первого нажатия</label>
+        </div>
+
         <button id="createRoomBtn">Я ведущий — создать комнату</button>
+        <div id="createStatus" class="status">Каждая новая комната получает новый набор тем и вопросов.</div>
+
+        <div class="reclaim-box">
+          <label>Восстановить комнату ведущего</label>
+          <input id="reclaimCode" placeholder="Код комнаты" />
+          <button id="reclaimBtn" class="ghost">Восстановить</button>
+        </div>
       </section>
 
       <section class="card">
@@ -60,7 +99,10 @@
           <div class="round-card">
             <span>Комната</span>
             <strong id="hostCode"></strong>
+            <img id="qrCode" class="qr-code" alt="QR code" />
             <button class="copy" id="copyLinkBtn">Скопировать ссылку</button>
+            <button class="copy" id="displayLinkBtn">Большой экран</button>
+            <div id="readyCount" class="ready-count">Готовы: 0/0</div>
             <div class="round-label" id="roundLabel">Раунд 1</div>
             <div class="chooser" id="chooserLabel"></div>
           </div>
@@ -73,16 +115,102 @@
           </div>
         </div>
 
+        <div id="scoreTools" class="card score-tools">
+          <div>
+            <strong>Ручные очки</strong>
+            <span>Исправление спорных ситуаций</span>
+          </div>
+          <div class="score-tool-row">
+            <button class="ghost score-adjust" data-team="0" data-delta="-100">К1 −100</button>
+            <button class="ghost score-adjust" data-team="0" data-delta="100">К1 +100</button>
+            <button class="ghost score-adjust" data-team="1" data-delta="-100">К2 −100</button>
+            <button class="ghost score-adjust" data-team="1" data-delta="100">К2 +100</button>
+          </div>
+        </div>
+
         <div class="card controls">
           <button id="prevRoundBtn" class="ghost">← Раунд</button>
           <button id="nextRoundBtn">Следующий раунд →</button>
           <button id="finalBtn" class="gold">Финал</button>
+          <button id="undoBtn" class="ghost">Отменить последнее</button>
+          <button id="exportBtn" class="ghost">Скачать вопросы</button>
+          <button id="importBtn" class="ghost">Загрузить вопросы</button>
+          <input id="importFile" class="hidden" type="file" accept="application/json" />
+          <button id="lockBuzzBtn" class="ghost">Закрыть кнопки</button>
+          <button id="roomSettingsBtn" class="ghost">Настройки</button>
+          <button id="finishGameBtn" class="gold">Показать победителя</button>
           <button id="resetBtn" class="danger">Сброс игры</button>
+          <button id="resetUsedBtn" class="ghost">Сбросить историю вопросов</button>
+        </div>
+
+        <div id="proPanels" class="pro-grid">
+          <div class="card pro-card">
+            <div class="pro-head">
+              <h3>Журнал игры</h3>
+              <button id="clearLogBtn" class="ghost mini-btn">Очистить</button>
+            </div>
+            <div id="eventLog" class="event-log"></div>
+          </div>
+
+          <div class="card pro-card">
+            <h3>Апелляции</h3>
+            <div id="appealsList" class="appeals-list"></div>
+          </div>
+
+          <div class="card pro-card">
+            <h3>Жалобы и модерация</h3>
+            <div id="reportsList" class="appeals-list"></div>
+          </div>
+
+          <div class="card pro-card">
+            <h3>Финальные ставки</h3>
+            <div id="wagersBox" class="wagers-box"></div>
+          </div>
         </div>
 
         <div class="card board-wrap">
+          <div class="progress-row">
+            <div>
+              <strong id="roundProgress">Открыто 0/25</strong>
+              <span id="totalProgress">Всего 0/75</span>
+            </div>
+            <div class="timer-controls">
+              <button class="ghost timer-pick" data-seconds="15">15 сек</button>
+              <button class="ghost timer-pick" data-seconds="30">30 сек</button>
+              <button class="ghost timer-pick" data-seconds="60">60 сек</button>
+              <button class="ghost" id="stopTimerBtn">Стоп таймер</button>
+            </div>
+          </div>
+          <div id="hostTimer" class="host-timer hidden">30</div>
           <div id="board" class="board"></div>
         </div>
+      </section>
+    </main>
+
+    <main id="displayScreen" class="screen hidden">
+      <section class="card display-board">
+        <div class="display-top">
+          <div class="display-team">
+            <img src="/assets/team1.jpeg" />
+            <h2 id="dTeam0Name">Черные короли</h2>
+            <strong id="dScore0">0</strong>
+          </div>
+
+          <div class="display-center">
+            <div id="dRoomCode" class="room-badge"></div>
+            <h1 id="dRound">Раунд 1</h1>
+            <p id="dQuestionStatus">Ждем вопрос</p>
+          </div>
+
+          <div class="display-team">
+            <img src="/assets/team2.jpeg" />
+            <h2 id="dTeam1Name">Усатые карлики</h2>
+            <strong id="dScore1">0</strong>
+          </div>
+        </div>
+
+        <div id="dQuestionBox" class="display-question"></div>
+        <div id="dWinner" class="winner-card hidden"></div>
       </section>
     </main>
 
@@ -111,8 +239,33 @@
           <p>Жди, пока ведущий откроет вопрос.</p>
         </div>
 
+        <button id="readyBtn" class="ghost ready-btn">Я готов</button>
         <button id="buzzBtn" class="buzz" disabled>ЖМУ!</button>
         <div id="buzzStatus" class="status"></div>
+
+        <div class="player-pro">
+          <h3>Командные инструменты</h3>
+
+          <label>Жалоба на игрока</label>
+          <div class="inline-controls">
+            <select id="reportPlayerSelect"></select>
+            <button id="reportBtn" class="danger">Пожаловаться</button>
+          </div>
+          <input id="reportReason" placeholder="Причина жалобы" />
+
+          <label>Апелляция ведущему</label>
+          <input id="appealText" placeholder="Например: ответ был засчитан неверно..." />
+          <button id="appealBtn" class="ghost">Отправить апелляцию</button>
+
+          <label>Финальная ставка</label>
+          <div class="inline-controls">
+            <input id="wagerInput" type="number" min="0" value="0" />
+            <button id="submitWagerBtn" class="gold">Отправить ставку</button>
+          </div>
+
+          <label>Заметка команды для финала</label>
+          <textarea id="teamNote" placeholder="Коротко обсудите финальный ответ или стратегию..."></textarea>
+        </div>
       </section>
     </main>
 
@@ -123,13 +276,19 @@
           <strong id="modalValue"></strong>
         </div>
         <h2 id="modalQuestion"></h2>
+
+        <div class="host-answer">
+          <span>Ответ видит только ведущий:</span>
+          <strong id="hostOnlyAnswer"></strong>
+        </div>
+
         <div id="modalAnswer" class="answer hidden"></div>
 
         <h3>Кто нажал первым</h3>
         <div id="buzzList" class="buzz-list"></div>
 
         <div class="modal-actions">
-          <button id="showAnswerBtn" class="ghost">Показать ответ</button>
+          <button id="showAnswerBtn" class="ghost">Показать ответ игрокам</button>
           <button id="nobodyBtn" class="danger">Никто не ответил</button>
         </div>
       </div>
@@ -153,7 +312,7 @@
         <input id="wager1" type="number" value="0" min="0" />
 
         <div class="modal-actions">
-          <button id="showFinalAnswerBtn" class="ghost">Показать ответ</button>
+          <button id="showFinalAnswerBtn" class="ghost">Показать ответ игрокам</button>
           <button id="final0Correct">Команда 1 верно</button>
           <button id="final0Wrong" class="danger">Команда 1 неверно</button>
           <button id="final1Correct">Команда 2 верно</button>
@@ -163,8 +322,64 @@
       </div>
     </div>
 
+    <div id="onboardingModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-meta">
+          <span>Как играть</span>
+          <strong>3 минуты до старта</strong>
+        </div>
+        <div class="onboarding-steps">
+          <div><strong>1</strong><p>Ведущий создает комнату и показывает QR-код.</p></div>
+          <div><strong>2</strong><p>Игроки заходят с телефонов, выбирают команду и нажимают "Я готов".</p></div>
+          <div><strong>3</strong><p>Ведущий открывает вопрос, игроки жмут "ЖМУ!", ведущий засчитывает ответ.</p></div>
+          <div><strong>4</strong><p>В финале команды делают скрытую ставку, затем определяется победитель.</p></div>
+        </div>
+        <button id="closeOnboardingBtn">Понятно</button>
+      </div>
+    </div>
+
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-meta">
+          <span>Настройки комнаты</span>
+          <strong>v5</strong>
+        </div>
+
+        <label>Таймер по умолчанию</label>
+        <select id="settingsTimer">
+          <option value="15">15 сек</option>
+          <option value="30">30 сек</option>
+          <option value="45">45 сек</option>
+          <option value="60">60 сек</option>
+          <option value="90">90 сек</option>
+        </select>
+
+        <label class="check-row"><input id="settingsNegative" type="checkbox" /> Разрешить минусовые очки</label>
+        <label class="check-row"><input id="settingsAutoLock" type="checkbox" /> Блокировать кнопки после первого нажатия</label>
+
+        <div class="modal-actions">
+          <button id="saveSettingsBtn">Сохранить</button>
+          <button id="closeSettingsBtn" class="ghost">Закрыть</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="winnerModal" class="modal hidden">
+      <div class="modal-card winner-modal-card">
+        <h2 id="winnerTitle"></h2>
+        <p id="winnerSubtitle"></p>
+        <button id="clearWinnerBtn" class="ghost">Закрыть</button>
+      </div>
+    </div>
+
     <div id="toast" class="toast hidden"></div>
   </div>
+
+  <footer class="app-footer">
+    <a href="/privacy.html">Конфиденциальность</a>
+    <a href="/terms.html">Правила</a>
+    <a href="/safety.html">Безопасность</a>
+  </footer>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/client.js"></script>
