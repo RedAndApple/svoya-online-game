@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Своя игра Online</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <div>
+        <h1>Своя игра Online</h1>
+        <p>2 команды · телефоны игроков · ведущий управляет игрой</p>
+      </div>
+      <div id="roomBadge" class="room-badge hidden"></div>
+    </header>
+
+    <main id="home" class="screen">
+      <section class="card hero">
+        <h2>Запуск</h2>
+        <p>Один человек открывает игру как ведущий. Остальные заходят с телефонов по ссылке и коду комнаты.</p>
+        <button id="createRoomBtn">Я ведущий — создать комнату</button>
+      </section>
+
+      <section class="card">
+        <h2>Я игрок</h2>
+        <label>Код комнаты</label>
+        <input id="joinCode" placeholder="Например: ABC12" autocomplete="off" />
+
+        <label>Имя игрока</label>
+        <input id="playerName" placeholder="Например: Илья" autocomplete="off" />
+
+        <label>Команда</label>
+        <div class="team-select">
+          <button class="team-pick active" data-team="0">
+            <img src="/assets/team1.jpeg" />
+            <span>Усатые карлики</span>
+          </button>
+          <button class="team-pick" data-team="1">
+            <img src="/assets/team2.jpeg" />
+            <span>Черные короли</span>
+          </button>
+        </div>
+
+        <button id="joinRoomBtn">Войти в игру</button>
+      </section>
+    </main>
+
+    <main id="hostScreen" class="screen hidden">
+      <section class="host-grid">
+        <div class="card scoreboard">
+          <div class="team-card" id="hostTeam0">
+            <img src="/assets/team1.jpeg" />
+            <h2 id="hTeam0Name">Усатые карлики</h2>
+            <div class="score" id="hScore0">0</div>
+            <div class="players" id="hPlayers0"></div>
+          </div>
+
+          <div class="round-card">
+            <span>Комната</span>
+            <strong id="hostCode"></strong>
+            <button class="copy" id="copyLinkBtn">Скопировать ссылку</button>
+            <div class="round-label" id="roundLabel">Раунд 1</div>
+            <div class="chooser" id="chooserLabel"></div>
+          </div>
+
+          <div class="team-card" id="hostTeam1">
+            <img src="/assets/team2.jpeg" />
+            <h2 id="hTeam1Name">Черные короли</h2>
+            <div class="score" id="hScore1">0</div>
+            <div class="players" id="hPlayers1"></div>
+          </div>
+        </div>
+
+        <div class="card controls">
+          <button id="prevRoundBtn" class="ghost">← Раунд</button>
+          <button id="nextRoundBtn">Следующий раунд →</button>
+          <button id="finalBtn" class="gold">Финал</button>
+          <button id="resetBtn" class="danger">Сброс игры</button>
+        </div>
+
+        <div class="card board-wrap">
+          <div id="board" class="board"></div>
+        </div>
+      </section>
+    </main>
+
+    <main id="playerScreen" class="screen hidden">
+      <section class="card player-main">
+        <div class="my-team">
+          <img id="myTeamAvatar" />
+          <div>
+            <h2 id="myName"></h2>
+            <p id="myTeamName"></p>
+          </div>
+        </div>
+
+        <div class="mini-score">
+          <div>
+            <span id="pTeam0Name">Усатые карлики</span>
+            <strong id="pScore0">0</strong>
+          </div>
+          <div>
+            <span id="pTeam1Name">Черные короли</span>
+            <strong id="pScore1">0</strong>
+          </div>
+        </div>
+
+        <div id="playerQuestionBox" class="question-box">
+          <p>Жди, пока ведущий откроет вопрос.</p>
+        </div>
+
+        <button id="buzzBtn" class="buzz" disabled>ЖМУ!</button>
+        <div id="buzzStatus" class="status"></div>
+      </section>
+    </main>
+
+    <div id="questionModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-meta">
+          <span id="modalTheme"></span>
+          <strong id="modalValue"></strong>
+        </div>
+        <h2 id="modalQuestion"></h2>
+        <div id="modalAnswer" class="answer hidden"></div>
+
+        <h3>Кто нажал первым</h3>
+        <div id="buzzList" class="buzz-list"></div>
+
+        <div class="modal-actions">
+          <button id="showAnswerBtn" class="ghost">Показать ответ</button>
+          <button id="nobodyBtn" class="danger">Никто не ответил</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="finalModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-meta">
+          <span>Финал</span>
+          <strong>Ставки</strong>
+        </div>
+
+        <h2 id="finalTheme"></h2>
+        <p id="finalQuestion" class="final-q"></p>
+        <div id="finalAnswer" class="answer hidden"></div>
+
+        <label id="wager0Label"></label>
+        <input id="wager0" type="number" value="0" min="0" />
+
+        <label id="wager1Label"></label>
+        <input id="wager1" type="number" value="0" min="0" />
+
+        <div class="modal-actions">
+          <button id="showFinalAnswerBtn" class="ghost">Показать ответ</button>
+          <button id="final0Correct">Команда 1 верно</button>
+          <button id="final0Wrong" class="danger">Команда 1 неверно</button>
+          <button id="final1Correct">Команда 2 верно</button>
+          <button id="final1Wrong" class="danger">Команда 2 неверно</button>
+          <button id="closeFinalBtn" class="gold">Закрыть финал</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/client.js"></script>
+</body>
+</html>
