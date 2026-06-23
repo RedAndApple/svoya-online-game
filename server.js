@@ -163,7 +163,7 @@ function createRoom(hostId) {
     hostId,
     players: {},
     state: {
-      teamNames: ["Усатые карлики", "Черные короли"],
+      teamNames: ["Черные короли", "Усатые карлики"],
       teamAvatars: ["/assets/team1.jpeg", "/assets/team2.jpeg"],
       scores: [0, 0],
       round: 0,
