@@ -11,6 +11,28 @@ const io = new Server(server, {
 
 app.use(express.static("public"));
 
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    service: "svoya-online-game",
+    roomsCount: rooms.size,
+    uptime: process.uptime(),
+    time: new Date().toISOString()
+  });
+});
+
+app.get("/api/rooms", (req, res) => {
+  res.json({
+    rooms: Array.from(rooms.values()).map(room => ({
+      code: room.code,
+      players: Object.keys(room.players || {}).length,
+      hasHost: !!room.hostId,
+      round: room.state?.round ?? 0,
+      createdPreset: room.state?.roomPreset || "classic"
+    }))
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 const rooms = new Map();
 const SNAPSHOT_PATH = require("path").join(__dirname, "roomsSnapshot.json");
@@ -190,7 +212,7 @@ function applyScore(room, team, delta) {
   if (!room.state.settings?.allowNegativeScores) {
     room.state.scores[team] = Math.max(0, room.state.scores[team] + delta);
   } else {
-    applyScore(room, team, delta);
+    room.state.scores[team] += delta;
   }
 }
 
@@ -215,6 +237,7 @@ io.on("connection", socket => {
       socket.data.role = "host";
       socket.join(room.code);
       socket.emit("host:created", publicRoom(room));
+      console.log(`Room created: ${room.code}`);
       emitRoom(room.code);
     } catch (err) {
       console.error(err);
@@ -261,6 +284,7 @@ io.on("connection", socket => {
     socket.data.role = "player";
     socket.join(code);
     socket.emit("player:joined", publicRoom(room));
+    console.log(`Player joined: ${name} -> ${code}`);
     emitRoom(code);
   });
 

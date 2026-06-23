@@ -193,3 +193,23 @@ After changing this value, run:
 ```bash
 npx cap sync ios
 ```
+
+
+## Render stable mode
+
+For web deployment on Render, the client now connects with same-origin Socket.IO:
+
+```js
+const socket = isNativeCapacitorRuntime() ? io(SVoyaNativeBackendUrl) : io();
+```
+
+This prevents room mismatch between the website and backend.
+
+Debug endpoints:
+
+```text
+/api/health
+/api/rooms
+```
+
+Service worker cache is disabled for live multiplayer stability.

@@ -1,9 +1,12 @@
-// For web deployment, leave this empty.
-// For native iOS Capacitor build, set it to your Render/VPS backend URL, e.g.
-// const SVoyaBackendUrl = "https://svoya-online-game.onrender.com";
-const SVoyaBackendUrl = "https://svoya-online-game.onrender.com";
+// Web on Render uses the same origin automatically.
+// Native iOS Capacitor build uses this hosted backend URL.
+const SVoyaNativeBackendUrl = "https://svoya-online-game.onrender.com";
 
-const socket = SVoyaBackendUrl ? io(SVoyaBackendUrl) : io();
+function isNativeCapacitorRuntime() {
+  return location.protocol === "capacitor:" || location.protocol === "ionic:";
+}
+
+const socket = isNativeCapacitorRuntime() ? io(SVoyaNativeBackendUrl) : io();
 
 let myRole = null;
 let myTeam = null;
@@ -17,6 +20,22 @@ let selectedPreset = "classic";
 setInterval(updateHostTimer, 250);
 
 const $ = id => document.getElementById(id);
+
+function clearOldServiceWorkersAndCaches() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then(regs => regs.forEach(reg => reg.unregister()))
+      .catch(() => null);
+  }
+
+  if ("caches" in window) {
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .catch(() => null);
+  }
+}
+
+clearOldServiceWorkersAndCaches();
 
 if (!localStorage.getItem("onboardingSeen")) {
   setTimeout(() => $("onboardingModal")?.classList.remove("hidden"), 300);
@@ -32,7 +51,7 @@ setTimeout(() => {
 }, 0);
 
 function getPublicBaseUrl() {
-  if (SVoyaBackendUrl) return SVoyaBackendUrl;
+  if (isNativeCapacitorRuntime()) return SVoyaNativeBackendUrl;
   return location.origin;
 }
 
@@ -274,6 +293,15 @@ function applyFinal(team, correct) {
   const wager = Number($(team === 0 ? "wager0" : "wager1").value || 0);
   socket.emit("host:finalApply", { team, wager, correct });
 }
+
+socket.on("connect", () => {
+  console.log("Socket connected", socket.id);
+});
+
+socket.on("connect_error", err => {
+  console.error("Socket connection error", err);
+  toast("Ошибка подключения к серверу. Обнови страницу.");
+});
 
 socket.on("host:status", msg => {
   if ($("createStatus")) $("createStatus").textContent = msg;
@@ -739,8 +767,4 @@ if (displayParam) {
   $("joinCode").value = roomParam.toUpperCase();
 }
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => null);
-  });
-}
+// Service worker disabled for live multiplayer stability on Render.
