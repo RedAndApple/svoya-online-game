@@ -1,7 +1,0 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-<rect width="512" height="512" rx="112" fill="#080914"/>
-<circle cx="256" cy="256" r="184" fill="#f4c76a"/>
-<rect x="116" y="164" width="280" height="196" rx="34" fill="#12162c"/>
-<text x="256" y="250" font-family="Arial, sans-serif" font-size="82" font-weight="900" text-anchor="middle" fill="#f4c76a">100</text>
-<text x="256" y="318" font-family="Arial, sans-serif" font-size="42" font-weight="900" text-anchor="middle" fill="#ffffff">QUIZ</text>
-</svg>

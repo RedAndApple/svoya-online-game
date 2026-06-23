@@ -1,31 +1,18 @@
 {
-  "name": "svoya-online-game",
+  "name": "svoya-online-game-render-perfect",
   "version": "1.0.0",
-  "description": "Онлайн-викторина для компаний и вечеринок",
+  "description": "Stable Render-only online quiz game",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "cap:init": "npx cap init \"Своя Игра Онлайн\" ru.svoyaigra.online --web-dir public",
-    "cap:add:ios": "npx cap add ios",
-    "cap:sync": "npx cap sync ios",
-    "cap:open:ios": "npx cap open ios",
-    "ios:prepare": "npm install && npm run cap:sync && npm run cap:open:ios"
+    "check": "node -c server.js && node -c public/client.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "socket.io": "^4.7.5",
-    "@capacitor/core": "^7.0.0",
-    "@capacitor/ios": "^7.0.0",
-    "@capacitor/app": "^7.0.0",
-    "@capacitor/haptics": "^7.0.0",
-    "@capacitor/status-bar": "^7.0.0",
-    "@capacitor/splash-screen": "^7.0.0"
+    "socket.io": "^4.7.5"
   },
   "engines": {
     "node": ">=18"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "^7.0.0"
   }
 }
